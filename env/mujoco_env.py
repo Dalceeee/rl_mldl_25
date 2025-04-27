@@ -51,7 +51,7 @@ class MujocoEnv(gym.Env):
         self.init_qpos = self.sim.data.qpos.ravel().copy()
         self.init_qvel = self.sim.data.qvel.ravel().copy()
 
-        self._set_action_space()
+        self._set_action_space() # action è un vettore di comandi ai motori (attuatori)
 
         action = self.action_space.sample()
         observation, _reward, done, _info = self.step(action)
@@ -68,7 +68,7 @@ class MujocoEnv(gym.Env):
         self._viewers = {}
 
     def _set_action_space(self):
-        bounds = self.model.actuator_ctrlrange.copy().astype(np.float32)
+        bounds = self.model.actuator_ctrlrange.copy().astype(np.float32) # l’azione ha dimensione model.nu (numero di attuatori).
         low, high = bounds.T
         self.action_space = spaces.Box(low=low, high=high, dtype=np.float32)
         return self.action_space

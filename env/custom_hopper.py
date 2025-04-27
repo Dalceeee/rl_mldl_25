@@ -55,20 +55,33 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         Parameters
         ----------
         a : ndarray,
-            action to be taken at the current timestep
+            action to be taken at the current timestep (È un vettore di comandi (es. tensioni o forze ai motori).)
         """
-        posbefore = self.sim.data.qpos[0]
-        self.do_simulation(a, self.frame_skip)
-        posafter, height, ang = self.sim.data.qpos[0:3]
+        posbefore = self.sim.data.qpos[0] # Salva la posizione iniziale lungo l’asse X
+        self.do_simulation(a, self.frame_skip) # frame_skip simula più passi fisici per ogni azione del controller (più realistico per policy RL).
+        posafter, height, ang = self.sim.data.qpos[0:3] # Estrae stato attuale
         alive_bonus = 1.0
         reward = (posafter - posbefore) / self.dt
         reward += alive_bonus
         reward -= 1e-3 * np.square(a).sum()
+        """
+        Guadagni se avanzi lungo l’asse X
+        Bonus fisso per “essere vivo”
+        Penalità per usare troppa forza (azione troppo grande)
+        """
         s = self.state_vector()
         done = not (np.isfinite(s).all() and (np.abs(s[2:]) < 100).all() and (height > .7) and (abs(ang) < .2))
+        """
+        Condizione di fine episodio.
+        Finisce l'episodio se:
+        - Qualche valore nel vettore stato è NaN/inf
+        - Stato troppo estremo
+        - Altezza troppo bassa (è caduto)
+        - Angolo troppo inclinato (non sta in piedi)
+        """
         ob = self._get_obs()
 
-        return ob, reward, done, {}
+        return ob, reward, done, {} # Restituisce tutto
 
 
     def _get_obs(self):

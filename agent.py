@@ -80,19 +80,21 @@ class Agent(object):
         self.gamma = 0.99
         self.states = []
         self.next_states = []
+        self.actions = [] # added
         self.action_log_probs = []
         self.rewards = []
         self.done = []
 
 
     def update_policy(self):
+        actions = torch.stack(self.actions, dim=0).to(self.train_device).squeeze(-1) # added
         action_log_probs = torch.stack(self.action_log_probs, dim=0).to(self.train_device).squeeze(-1)
         states = torch.stack(self.states, dim=0).to(self.train_device).squeeze(-1)
         next_states = torch.stack(self.next_states, dim=0).to(self.train_device).squeeze(-1)
         rewards = torch.stack(self.rewards, dim=0).to(self.train_device).squeeze(-1)
         done = torch.Tensor(self.done).to(self.train_device)
 
-        self.states, self.next_states, self.action_log_probs, self.rewards, self.done = [], [], [], [], []
+        self.states, self.next_states, self.actions, self.action_log_probs, self.rewards, self.done = [], [], [], [], [], []
 
         #
         # TASK 2:
@@ -100,7 +102,17 @@ class Agent(object):
         #   - compute policy gradient loss function given actions and returns
         #   - compute gradients and step the optimizer
         #
+        discounted_returns = discount_rewards(rewards, self.gamma).to(self.train_device).squeeze(-1)
+        
+        for t in range(len(discounted_returns)):
+            g = discounted_returns[t] if not done[t] else 0
+            log_prob = self.policy(states[t]).log_prob(actions[t]).sum()
+            
+            loss = -(self.gamma**t) * g * log_prob
 
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
         #
         # TASK 3:
@@ -131,9 +143,10 @@ class Agent(object):
             return action, action_log_prob
 
 
-    def store_outcome(self, state, next_state, action_log_prob, reward, done):
+    def store_outcome(self, state, next_state, action, action_log_prob, reward, done):
         self.states.append(torch.from_numpy(state).float())
         self.next_states.append(torch.from_numpy(next_state).float())
+        self.actions.append(action) # added
         self.action_log_probs.append(action_log_prob)
         self.rewards.append(torch.Tensor([reward]))
         self.done.append(done)

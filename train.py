@@ -56,13 +56,16 @@ def main():
 
 			state, reward, done, info = env.step(action.detach().cpu().numpy())
 
-			agent.store_outcome(previous_state, state, action_probabilities, reward, done)
+			agent.store_outcome(previous_state, state,action, action_probabilities, reward, done) # added action
 
 			train_reward += reward
 		
 		if (episode+1)%args.print_every == 0:
 			print('Training episode:', episode)
 			print('Episode return:', train_reward)
+		
+		# Update the policy
+		agent.update_policy()
 
 
 	torch.save(agent.policy.state_dict(), "model.mdl")
