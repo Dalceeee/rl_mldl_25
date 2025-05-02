@@ -70,7 +70,7 @@ def main():
 		agent.update_policy(alghoritm="REINFORCE")
 
 
-	torch.save(agent.policy.state_dict(), "model_baseline.mdl")
+	torch.save(agent.policy.state_dict(), "model_baseline2.mdl")
 
 	
 
