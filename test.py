@@ -31,7 +31,7 @@ def main():
 	observation_space_dim = env.observation_space.shape[-1]
 	action_space_dim = env.action_space.shape[-1]
 
-	policy = Policy(observation_space_dim, action_space_dim)
+	policy = Policy(observation_space_dim, action_space_dim, alghoritm="REINFORCE")
 	policy.load_state_dict(torch.load(args.model), strict=True)
 
 	agent = Agent(policy, device=args.device)

@@ -37,7 +37,7 @@ def main():
 	observation_space_dim = env.observation_space.shape[-1]
 	action_space_dim = env.action_space.shape[-1]
 
-	policy = Policy(observation_space_dim, action_space_dim)
+	policy = Policy(observation_space_dim, action_space_dim, alghoritm="REINFORCE")
 	agent = Agent(policy, device=args.device)
 
     #
@@ -55,8 +55,10 @@ def main():
 			previous_state = state
 
 			state, reward, done, info = env.step(action.detach().cpu().numpy())
+			
+			env.render()
 
-			agent.store_outcome(previous_state, state,action, action_probabilities, reward, done) # added action
+			agent.store_outcome(previous_state, state, action, action_probabilities, reward, done) # added action
 
 			train_reward += reward
 		
@@ -65,10 +67,10 @@ def main():
 			print('Episode return:', train_reward)
 		
 		# Update the policy
-		agent.update_policy()
+		agent.update_policy(alghoritm="REINFORCE")
 
 
-	torch.save(agent.policy.state_dict(), "model.mdl")
+	torch.save(agent.policy.state_dict(), "model_baseline.mdl")
 
 	
 
